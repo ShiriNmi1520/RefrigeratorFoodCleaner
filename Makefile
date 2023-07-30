@@ -12,5 +12,5 @@ deploy: clean build
 	sls deploy --verbose
 
 gomodgen:
-# chmod u+x gomod.sh
+	chmod u+x gomod.sh
 	./gomod.sh
