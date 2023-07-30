@@ -44,24 +44,15 @@ jobs:
           name: Deploy
           command: serverless deploy -v
 workflows:
-  build:
-    jobs:
-      - build
-    triggers:
-      - schedule:
-          filters:
-            branches:
-              only: main
   test:pullRequest:
     when: << pipeline.parameters.isPR >>
     jobs:
       - test
-  deploy:
+  buildAndDeploy:
     jobs:
+      - build:
+          requires:
+            - test
       - deploy:
           requires:
             - build
-            - test:pullRequest
-          filters:
-            branches:
-              only: main
