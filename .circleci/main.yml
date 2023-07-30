@@ -1,0 +1,64 @@
+version: 2.1
+parameters:
+  isPR:
+    type: boolean
+    default: false
+orbs:
+  go: circleci/go@1.7.3
+  serverless-framework: circleci/serverless-framework@2.0.1
+  aws-cli: circleci/aws-cli@4.0.0
+jobs:
+  test:
+    executor:
+      name: go/default
+      tag: '1.16'
+    steps:
+      - checkout
+      - go/load-cache
+      - go/mod-download
+      - go/save-cache
+      - go/test:
+          covermode: atomic
+          failfast: true
+          race: true
+  build:
+    executor:
+      name: go/default
+      tag: '1.16'
+    steps:
+      - checkout
+      - go/load-cache
+      - go/mod-download
+      - go/save-cache
+      - run:
+          name: Build
+          command: make build
+  deploy:
+    executor:
+      name: serverless-framework/default
+    steps:
+      - checkout
+      - serverless-framework/setup
+      - aws-cli/setup
+      - run:
+          name: Deploy
+          command: serverless deploy -v
+workflows:
+  test:pullRequest:
+    when: << pipeline.parameters.isPR >>
+    jobs:
+      - test
+  buildAndDeploy:
+    triggers:
+      # Make deploy task only occurs at midnight
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - main
+    jobs:
+      - build
+      - deploy:
+          requires:
+            - build
