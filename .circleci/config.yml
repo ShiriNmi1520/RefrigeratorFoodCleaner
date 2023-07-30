@@ -1,36 +1,20 @@
+setup: true
 version: 2.1
 orbs:
-  go: circleci/go@1.7.3
-jobs:
-  test:
-    executor:
-      name: go/default
-      tag: '1.16'
-    steps:
-      - checkout
-      - go/load-cache
-      - go/mod-download
-      - go/save-cache
-      - go/test:
-          covermode: atomic
-          failfast: true
-          race: true
-  build:
-    executor:
-      name: go/default
-      tag: '1.16'
-    steps:
-      - checkout
-      - go/load-cache
-      - go/mod-download
-      - go/save-cache
-      - run:
-          name: Build
-          command: make build
+  continuation: circleci/continuation@0.2.0
 workflows:
-  build-workflow:
+  setup:
     jobs:
-      - build
-  test-workflow:
-    jobs:
-      - test
+      - continuation/continue:
+          configuration_path: ".circleci/main.yml"
+          parameters: /home/circleci/params.json
+          pre-steps:
+            - run:
+                command: |
+                  if [ -z "${CIRCLE_PULL_REQUEST##*/}" ]
+                  then
+                    ISPR=false
+                  else
+                    ISPR=true
+                  fi
+                  echo '{ "isPR": '$ISPR' }' >> /home/circleci/params.json
