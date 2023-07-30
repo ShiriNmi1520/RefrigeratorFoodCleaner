@@ -9,7 +9,6 @@ orbs:
   aws-cli: circleci/aws-cli@4.0.0
 jobs:
   test:
-    when: << pipeline.parameters.isPR >>
     executor:
       name: go/default
       tag: '1.16'
@@ -55,6 +54,7 @@ workflows:
             branches:
               only: main
   test:pullRequest:
+    when: << pipeline.parameters.isPR >>
     jobs:
       - test
   deploy:
